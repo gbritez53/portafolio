@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { site } from '../../config/site';
 
 export const prerender = false;
 
@@ -6,6 +7,7 @@ const clean = (value: FormDataEntryValue | null, max: number) => String(value ??
 const allowedServices = ['Diseño y desarrollo web', 'Diseño para redes', 'Vídeo / reel', 'Necesito orientación'];
 
 export const POST: APIRoute = async ({ request }) => {
+  if (!site.form.enabled) return Response.json({ message: 'El formulario está desactivado.' }, { status: 503 });
   const data = await request.formData();
   if (clean(data.get('website'), 200)) return new Response(JSON.stringify({ ok: true }), { status: 202 });
   const startedAt = Number(data.get('startedAt'));

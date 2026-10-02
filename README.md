@@ -12,7 +12,7 @@ npm run build
 npm run preview
 ```
 
-El build usa el adaptador Node en modo `standalone` porque el formulario necesita una ruta de servidor. Para otro proveedor de despliegue, sustituye `@astrojs/node` por su adaptador oficial y conserva `src/pages/api/contact.ts` como ruta dinámica.
+El sitio se genera como HTML estático (`output: 'static'`) con el adaptador `@astrojs/vercel`. Solo `src/pages/api/contact.ts` (`prerender = false`) se despliega como Vercel Function porque el formulario necesita una ruta de servidor. Para otro proveedor de despliegue, sustituye `@astrojs/vercel` por su adaptador oficial y conserva esa ruta como dinámica.
 
 ## Editar el sitio
 
@@ -59,7 +59,7 @@ El adaptador incluye validación en navegador y servidor, saneado, límites, hon
 
 Define `PUBLIC_SITE_URL=https://dominio-real.example` sin barra final. Esto activa canonicales, URLs Open Graph y sitemap. Sin dominio, `/sitemap.xml` responde honestamente que está pendiente.
 
-No se incluye despliegue automático. Ejecuta `npm run build` en CI y arranca el artefacto Node según la documentación del proveedor elegido.
+En Vercel, importa el repositorio (preset Astro) y carga las variables de `.env.example` en Settings → Environment Variables; el `.env` local no se sube.
 
 ## Accesibilidad y movimiento
 
