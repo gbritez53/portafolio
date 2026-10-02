@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import BrowserFrame from '../../components/BrowserFrame.astro';
+import Accordion from '../../components/Accordion.astro';
+import ContactBlock from '../../components/ContactBlock.astro';
+const faq = [
+  { question: '¿Puedo contratar solo una pieza o una página?', answer: 'Sí. El alcance se ajusta a la necesidad: desde una landing o un flyer hasta un sistema completo. Antes de empezar dejamos claro qué incluye la entrega.' },
+  { question: '¿Trabajáis con marcas fuera de México y España?', answer: 'Sí. El proceso está preparado para trabajar a distancia, compartir avances y tomar decisiones sin depender de la ubicación.' },
+  { question: '¿Podéis trabajar con una identidad que ya existe?', answer: 'Sí. Podemos aplicar y extender un sistema existente. Si faltan reglas visuales para el nuevo soporte, proponemos las necesarias dentro del alcance acordado.' },
+];
+---
+<BaseLayout title="Servicios" description="Diseño y desarrollo web, diseño de contenido para redes y vídeo para marcas de cualquier lugar.">
+  <section class="section"><div class="container"><span class="eyebrow">Servicios</span><h1 class="page-title">Lo que necesitas ver, contar y poner en marcha.</h1><p class="lead">Dos áreas que pueden trabajar juntas o por separado: una web que explica bien tu negocio y contenido visual que mantiene reconocible tu marca.</p></div></section>
+  <section class="section--tight"><div class="container"><div class="feature-grid">
+    <article class="feature" style="grid-column:span 2"><b>01 · WEB</b><h2 class="section-title">Diseño y desarrollo web</h2><p>Ordenamos el contenido, diseñamos cada pantalla y construimos una web usable, responsive y lista para conectar con tus herramientas.</p><a class="arrow-link" href="/servicios/diseno-web">Ver el servicio <span>→</span></a></article>
+    <BrowserFrame src="/visuals/casa-lumbre.svg" alt="Concepto web Casa Lumbre" />
+    <div><img src="/visuals/nopal-club.svg" alt="Piezas para redes de Nopal Club" width="1400" height="900" loading="lazy" /></div>
+    <article class="feature" style="grid-column:span 2"><b>02 · CONTENIDO</b><h2 class="section-title">Diseño para redes</h2><p>Diseñamos posts, historias, carruseles, flyers y reels para que las piezas cambien de formato sin perder la voz de la marca.</p><a class="arrow-link" href="/servicios/diseno-para-redes">Ver el servicio <span>→</span></a></article>
+  </div></div></section>
+  <section class="section section--dark"><div class="container"><SectionHeading number="Incluye" title="Un alcance que se entiende antes de empezar." /><div class="feature-grid"><article class="feature"><b>01</b><h3>Qué hacemos</h3><p>Estrategia, dirección visual, diseño, producción o desarrollo según el proyecto.</p></article><article class="feature"><b>02</b><h3>Qué entregamos</h3><p>Archivos, pantallas, código o piezas terminadas, con formatos acordados.</p></article><article class="feature"><b>03</b><h3>Para quién encaja</h3><p>Marcas que necesitan ordenar su presencia o crear una pieza concreta con criterio.</p></article></div></div></section>
+  <section class="section"><div class="narrow"><SectionHeading number="FAQ" title="Preguntas antes de empezar." /><Accordion items={faq} /></div></section>
+  <ContactBlock />
+</BaseLayout>

@@ -1,0 +1,73 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BrowserFrame from '../components/BrowserFrame.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import BeforeAfter from '../components/BeforeAfter';
+import ContactBlock from '../components/ContactBlock.astro';
+const projects = (await getCollection('projects')).sort((a,b) => a.data.order - b.data.order).slice(0,4);
+const steps = [
+  ['Nos cuentas qué necesitas.', 'Una llamada o un mensaje con tu idea, el contexto y lo que necesitas resolver.'],
+  ['Definimos la dirección.', 'Acordamos alcance, prioridades, referencias y una ruta de trabajo compartida.'],
+  ['Diseñamos y desarrollamos.', 'Convertimos las decisiones en pantallas, piezas o secuencias listas para revisar.'],
+  ['Revisamos contigo.', 'Compartimos avances en momentos concretos y reunimos los cambios con claridad.'],
+  ['Preparamos la entrega.', 'Ordenamos archivos, formatos e indicaciones para que puedas usar el resultado.'],
+];
+---
+<BaseLayout title="Diseño Creativo" description="Diseño web y contenido para redes. Un estudio independiente con conexión entre México y España.">
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <h1 class="display">Diseñamos para que te elijan.</h1>
+        <p class="lead">Diseño web y contenido visual para que tu marca se entienda, se reconozca y tenga una presencia cuidada.</p>
+        <div class="button-row"><a class="button button--lime" href="/contacto">Cuéntanos tu idea <span>↗</span></a><a class="arrow-link" href="/proyectos">Explorar proyectos <span>→</span></a></div>
+        <p class="hero-meta">México · España · Proyectos desde cualquier lugar</p>
+      </div>
+      <div class="desk-composition" aria-label="Composición de bocetos y diseños sobre una mesa de trabajo">
+        <BrowserFrame class="hero-browser" src="/visuals/casa-lumbre.svg" alt="Concepto web para el restaurante ficticio Casa Lumbre" />
+        <div class="hero-piece"><strong>Una marca<br/>que se<br/>reconoce.</strong><div class="selection"></div></div>
+        <div class="hero-note">del primer boceto<br/>a la entrega ↘</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--dark">
+    <div class="narrow" data-reveal><span class="eyebrow">El punto de partida</span><p class="intro-statement">Bonito es el principio. <em>Después viene lo importante:</em> que se entienda qué haces, que todo tenga sentido y que contactar contigo sea fácil.</p></div>
+  </section>
+
+  <section class="section"><div class="container"><SectionHeading number="01" title="Dos formas de darle presencia a una idea." /></div>
+    <div class="services-split">
+      <article class="service-panel">
+        <div class="service-copy"><div><span class="label">Servicio 01</span><h3>Diseño y desarrollo web</h3><p>De la primera idea a una web publicada. Organizamos el contenido, diseñamos la experiencia y desarrollamos una página que funciona bien en móvil y escritorio.</p></div><a class="arrow-link" href="/servicios/diseno-web">Ver cómo hacemos tu web <span>→</span></a></div>
+        <div class="service-visual"><div class="stage-stack" data-reveal><div class="stage"><span class="eyebrow">Boceto</span><svg viewBox="0 0 400 260" aria-hidden="true"><path d="M20 35h150M20 65h260M20 95h220M20 145h360v90H20z" stroke="#171917" fill="none"/></svg></div><div class="stage"><span class="eyebrow">Wireframe</span><svg viewBox="0 0 400 260" aria-hidden="true"><rect x="15" y="20" width="370" height="45" fill="#889582"/><rect x="15" y="80" width="225" height="160" fill="#bcc5b6"/><rect x="255" y="80" width="130" height="75" fill="#9fac99"/></svg></div><div class="stage"><img src="/visuals/bruma-norte.svg" alt="Resultado final del concepto Bruma Norte" /></div></div></div>
+      </article>
+      <article class="service-panel">
+        <div class="service-copy"><div><span class="label">Servicio 02</span><h3>Diseño para redes</h3><p>Posts, historias, carruseles, flyers y vídeos que hablan el mismo idioma visual que tu marca.</p><p><small>Creamos y entregamos las piezas. La publicación y la gestión de las cuentas se presupuestan aparte si se necesitan.</small></p></div><a class="arrow-link" href="/servicios/diseno-para-redes">Explorar las piezas <span>→</span></a></div>
+        <div class="service-visual"><div class="social-stack" data-reveal><img src="/visuals/nopal-club.svg" alt="Post cuadrado de Nopal Club" /><img src="/visuals/pulso-mini.svg" alt="Frame vertical del reel conceptual Pulso Mini" /></div></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section"><div class="container"><SectionHeading number="02" title="Así se ve lo que hacemos." intro="Cuatro conceptos originales para enseñar el tipo de criterio, sistema y acabado que podemos construir." /><div class="project-list">{projects.map((project) => <ProjectCard project={project} />)}</div><div style="margin-top:4rem"><a class="button button--ghost" href="/proyectos">Ver todo el portfolio <span>→</span></a></div></div></section>
+
+  <section class="section section--dark"><div class="container"><SectionHeading number="03" title="Una idea. Un proceso claro." intro="El trabajo avanza mejor cuando sabes qué estamos decidiendo y qué viene después." /><div class="process-board" data-reveal>{steps.map((step, index) => <article class="process-note"><span class="status">{index < 2 ? 'en mesa' : 'siguiente'}</span><b>0{index + 1}</b><h3>{step[0]}</h3><p>{step[1]}</p></article>)}</div></div></section>
+
+  <section class="section"><div class="container"><SectionHeading number="04" title="Los cambios se ven." intro="Mueve el control para comparar una jerarquía plana con una dirección más clara y reconocible." /><BeforeAfter client:visible before="/visuals/before.svg" after="/visuals/after.svg" beforeAlt="Página inicial genérica, con jerarquía visual plana" afterAlt="Página reorganizada con mensaje principal, llamada a la acción y dirección visual coherente" /><p class="lead" style="margin-top:2rem">Aquí cambia lo observable: la jerarquía, la claridad del mensaje, la coherencia visual y el acceso a la carta. Es una comparación de diseño, no una promesa de resultados económicos.</p></div></section>
+
+  <section class="section section--tight"><div class="container idea-box" data-reveal><div><span class="eyebrow">Tu turno</span><h2 class="section-title">¿Qué tienes en mente?</h2><p class="typed-line"><span data-typed aria-hidden="true">Una web para mi restaurante.</span><span class="typed-cursor" aria-hidden="true"></span><span class="sr-only">Por ejemplo: una web para un restaurante, un carrusel de servicios o un reel de producto.</span></p><p>Podemos empezar por ahí.</p><a class="button" href="/contacto">Vamos a darle forma <span>→</span></a></div></div></section>
+
+  <section class="section"><div class="container case-copy-grid" data-reveal><div><span class="eyebrow">El estudio</span><h2 class="section-title">Cerca, aunque estemos lejos.</h2></div><div><p class="lead">Somos un estudio independiente de diseño y desarrollo. Trabajamos con negocios y marcas de México, España y otros lugares, con comunicación directa y un proceso que puedes seguir.</p><a class="arrow-link" href="/nosotros">Conocer el estudio <span>→</span></a></div></div></section>
+  <ContactBlock />
+  <script>
+    const setupTyping = () => {
+      const el = document.querySelector<HTMLElement>('[data-typed]'); if (!el || el.dataset.ready) return; el.dataset.ready = 'true';
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const phrases = ['Una web para mi restaurante.', 'Un carrusel para explicar mis servicios.', 'Un reel para presentar un producto.'];
+      let p = 0, i = phrases[0].length, deleting = true;
+      const type = () => { const phrase = phrases[p]; i += deleting ? -1 : 1; el.textContent = phrase.slice(0, i); if (i <= 0) { deleting = false; p = (p + 1) % phrases.length; } if (i >= phrases[p].length && !deleting) { deleting = true; setTimeout(type, 1800); return; } setTimeout(type, deleting ? 42 : 72); };
+      setTimeout(type, 1700);
+    };
+    setupTyping(); document.addEventListener('astro:page-load', setupTyping);
+  </script>
+</BaseLayout>

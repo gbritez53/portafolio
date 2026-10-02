@@ -1,0 +1,10 @@
+---
+import ContactForm from './ContactForm.astro';
+const { compact = true } = Astro.props;
+---
+<section class="section">
+  <div class="container contact-card" data-reveal>
+    <div><span class="eyebrow">Hablemos</span><h2>Cuéntanos lo que quieres hacer.</h2><p>No necesitas tenerlo todo resuelto. Con una idea y un poco de contexto podemos empezar.</p></div>
+    <ContactForm compact={compact} />
+  </div>
+</section>

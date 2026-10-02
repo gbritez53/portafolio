@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactForm from '../components/ContactForm.astro';
+import { site } from '../config/site';
+---
+<BaseLayout title="Contacto" description="Cuéntanos tu proyecto de diseño web, contenido para redes o vídeo.">
+  <section class="section"><div class="container"><span class="eyebrow">Contacto</span><h1 class="page-title">Cuéntanos lo que quieres hacer.</h1><p class="lead">No necesitas tenerlo todo resuelto. Con una idea y un poco de contexto podemos empezar.</p></div></section>
+  <section class="section--tight"><div class="container contact-card"><div><h2>Un mensaje es suficiente para abrir la conversación.</h2><p>El formulario se conecta a un proveedor desde variables de entorno. Si todavía no está configurado, te lo dirá con claridad y conservará lo que escribiste.</p><div class="footer-links" style="margin-top:2rem">{site.email && <a class="arrow-link" href={`mailto:${site.email}`}>{site.email} <span>↗</span></a>}{site.whatsapp && <a class="arrow-link" href={site.whatsapp}>Escribir por WhatsApp <span>↗</span></a>}{!site.email && !site.whatsapp && <small>No hay vías alternativas publicadas hasta añadir datos reales en la configuración.</small>}</div></div><ContactForm compact={false} /></div></section>
+  <section class="section--tight"><div class="narrow"><p><strong>Qué ocurre con tus datos:</strong> se utilizan únicamente para responder a tu consulta según lo descrito en el borrador de privacidad. No se guardan en esta web por defecto.</p></div></section>
+  <script>
+    const preselect = () => { const query = new URLSearchParams(location.search).get('servicio'); const select = document.querySelector<HTMLSelectElement>('select[name="service"]'); if (!select || !query) return; if (query === 'web') select.value = 'Diseño y desarrollo web'; if (query === 'redes') select.value = 'Diseño para redes'; };
+    preselect(); document.addEventListener('astro:page-load', preselect);
+  </script>
+</BaseLayout>

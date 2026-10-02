@@ -1,0 +1,8 @@
+---
+interface Props { src: string; alt: string; class?: string; }
+const { src, alt, class: className = '' } = Astro.props;
+---
+<div class:list={['browser', className]}>
+  <div class="browser-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+  <img src={src} alt={alt} width="1400" height="900" loading="lazy" />
+</div>

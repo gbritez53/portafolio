@@ -1,0 +1,94 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../config/site';
+import '../styles/global.css';
+
+interface Props { title: string; description?: string; image?: string; noindex?: boolean; }
+const { title, description = site.description, image = '/visuals/casa-lumbre.svg', noindex = false } = Astro.props;
+const pageTitle = title === site.name ? title : `${title} — ${site.name}`;
+const canonical = site.url ? new URL(Astro.url.pathname, site.url).toString() : undefined;
+const ogImage = site.url ? new URL(image, site.url).toString() : image;
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="es_ES" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta id="theme-color" name="theme-color" content="#f3f1eb" />
+    <script is:inline>
+      (() => {
+        try {
+          const saved = localStorage.getItem('dc-theme');
+          const theme = saved === 'light' || saved === 'dark'
+            ? saved
+            : 'light';
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
+    <link rel="icon" href="/favicon.svg" />
+    <title>{pageTitle}</title>
+    <ClientRouter />
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+    <div class="decor-bg" aria-hidden="true"><div class="noise"></div></div>
+    <Header />
+    <main id="contenido"><slot /></main>
+    <Footer />
+    <script>
+      import gsap from 'gsap';
+      import ScrollTrigger from 'gsap/ScrollTrigger';
+      import Lenis from 'lenis';
+      import 'lenis/dist/lenis.css';
+
+      let context: gsap.Context | undefined;
+      let lenis: Lenis | undefined;
+      let removeTicker: (() => void) | undefined;
+
+      const cleanup = () => {
+        context?.revert(); context = undefined;
+        lenis?.destroy(); lenis = undefined;
+        removeTicker?.(); removeTicker = undefined;
+      };
+
+      const init = () => {
+        cleanup();
+        const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        gsap.registerPlugin(ScrollTrigger);
+        if (!reduced && matchMedia('(pointer: fine)').matches) {
+          lenis = new Lenis({ duration: 1.05, smoothWheel: true, anchors: true });
+          lenis.on('scroll', ScrollTrigger.update);
+          const tick = (time: number) => lenis?.raf(time * 1000);
+          gsap.ticker.add(tick); gsap.ticker.lagSmoothing(0);
+          removeTicker = () => gsap.ticker.remove(tick);
+        }
+        if (reduced) { document.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => { el.style.opacity = '1'; el.style.transform = 'none'; }); return; }
+        context = gsap.context(() => {
+          gsap.from('.hero-copy > *', { opacity: 0, y: 22, duration: .8, stagger: .09, ease: 'power3.out' });
+          gsap.from('.desk-composition > *', { opacity: 0, scale: .96, y: 25, duration: .9, stagger: .1, ease: 'power3.out', delay: .2 });
+          document.querySelectorAll('[data-reveal]').forEach((element) => gsap.to(element, { opacity: 1, y: 0, duration: .8, ease: 'power3.out', scrollTrigger: { trigger: element, start: 'top 88%', once: true } }));
+          document.querySelectorAll<HTMLElement>('[data-parallax]').forEach((element) => gsap.to(element, { yPercent: -5, ease: 'none', scrollTrigger: { trigger: element, start: 'top bottom', end: 'bottom top', scrub: .6 } }));
+        });
+        ScrollTrigger.refresh();
+      };
+      document.addEventListener('astro:before-preparation', cleanup);
+      document.addEventListener('astro:page-load', init);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+---
+import { site } from '../config/site';
+const compact = Astro.props.compact ?? false;
+---
+<form class="contact-form" data-contact-form novalidate>
+  <input type="hidden" name="startedAt" value={Date.now()} />
+  <div class="honeypot" aria-hidden="true"><label>Deja este campo vacío <input name="website" tabindex="-1" autocomplete="off" /></label></div>
+  <div class="form-status" role="alert" aria-live="assertive"></div>
+  <div class="form-grid">
+    <div class="field"><label for={`name-${compact}`}>Nombre *</label><input id={`name-${compact}`} name="name" autocomplete="name" required maxlength="80" /><span class="field-error" data-error="name"></span></div>
+    <div class="field"><label for={`email-${compact}`}>Email *</label><input id={`email-${compact}`} name="email" type="email" autocomplete="email" required maxlength="160" /><span class="field-error" data-error="email"></span></div>
+    {!compact && <div class="field"><label for="company">Empresa o marca <small>(opcional)</small></label><input id="company" name="company" autocomplete="organization" maxlength="100" /><span class="field-error" data-error="company"></span></div>}
+    {!compact && <div class="field"><label for="whatsapp">WhatsApp <small>(opcional)</small></label><input id="whatsapp" name="whatsapp" type="tel" autocomplete="tel" maxlength="40" /><span class="field-error" data-error="whatsapp"></span></div>}
+    <div class:list={['field', compact && 'field--full']}><label for={`service-${compact}`}>¿Qué necesitas? *</label><select id={`service-${compact}`} name="service" required><option value="">Selecciona una opción</option><option>Diseño y desarrollo web</option><option>Diseño para redes</option><option>Vídeo / reel</option><option>Necesito orientación</option></select><span class="field-error" data-error="service"></span></div>
+    {!compact && site.form.showBudget && <div class="field"><label for="budget">Presupuesto orientativo <small>(opcional)</small></label><select id="budget" name="budget"><option value="">Prefiero no indicarlo</option>{site.form.budgetOptions.map((item) => <option>{item}</option>)}</select><span class="field-error" data-error="budget"></span></div>}
+    <div class="field field--full"><label for={`message-${compact}`}>Cuéntanos sobre el proyecto *</label><textarea id={`message-${compact}`} name="message" required minlength="20" maxlength="3000" placeholder="Qué quieres hacer, para quién y cualquier contexto que nos ayude."></textarea><span class="field-error" data-error="message"></span></div>
+    <div class="field field--full"><label class="check-row"><input name="privacy" type="checkbox" required /><span>He leído y acepto la <a href="/privacidad" target="_blank">política de privacidad</a>. *</span></label><span class="field-error" data-error="privacy"></span></div>
+    <div class="field field--full"><button class="button" type="submit">Enviar mi idea <span aria-hidden="true">→</span></button></div>
+  </div>
+</form>
+
+<script>
+  const setupForms = () => document.querySelectorAll<HTMLFormElement>('[data-contact-form]').forEach((form) => {
+    if (form.dataset.ready) return; form.dataset.ready = 'true';
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const status = form.querySelector<HTMLElement>('.form-status')!;
+      const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+      form.querySelectorAll<HTMLElement>('.field-error').forEach((el) => el.textContent = '');
+      form.querySelectorAll<HTMLElement>('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+      if (!form.checkValidity()) { form.reportValidity(); status.textContent = 'Revisa los campos marcados antes de enviar.'; return; }
+      button.disabled = true; button.textContent = 'Enviando…'; status.textContent = 'Enviando tu mensaje…';
+      try {
+        const response = await fetch('/api/contact', { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
+        const result = await response.json();
+        if (!response.ok) {
+          if (result.fields) Object.entries(result.fields).forEach(([key, value]) => {
+            const input = form.elements.namedItem(key) as HTMLElement | null; input?.setAttribute('aria-invalid', 'true');
+            const error = form.querySelector<HTMLElement>(`[data-error="${key}"]`); if (error) error.textContent = String(value);
+          });
+          throw new Error(result.message || 'No pudimos enviar el mensaje.');
+        }
+        window.location.assign('/gracias');
+      } catch (error) {
+        status.textContent = error instanceof Error ? error.message : 'No pudimos enviar el mensaje. Conservamos lo que escribiste para que puedas intentarlo de nuevo.';
+        button.disabled = false; button.innerHTML = 'Intentar de nuevo <span aria-hidden="true">→</span>';
+      }
+    });
+  });
+  setupForms(); document.addEventListener('astro:page-load', setupForms);
+</script>

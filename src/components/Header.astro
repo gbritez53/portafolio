@@ -1,0 +1,75 @@
+---
+import { site } from '../config/site';
+const path = Astro.url.pathname;
+---
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="/" aria-label="Diseño Creativo, inicio">Diseño <i>Creativo</i></a>
+    <nav class="desktop-nav" aria-label="Navegación principal">
+      {site.navigation.map((item) => <a href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>{item.label}</a>)}
+    </nav>
+    <div class="nav-actions">
+      <button class="theme-toggle" data-theme-toggle type="button" aria-label="Activar modo oscuro" aria-pressed="false">
+        <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg>
+        <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.3A9 9 0 0 1 8.7 3.5a9 9 0 1 0 11.8 11.8Z"></path></svg>
+      </button>
+      <a class="button button--lime nav-cta" href="/contacto">Cuéntanos tu idea <span aria-hidden="true">↗</span></a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú"><span aria-hidden="true">☰</span></button>
+    </div>
+  </div>
+  <nav class="mobile-nav" id="mobile-menu" data-open="false" aria-label="Navegación móvil">
+    {site.navigation.map((item) => <a href={item.href}>{item.label}</a>)}
+    <div class="mobile-meta">México · España · Proyectos desde cualquier lugar</div>
+  </nav>
+</header>
+
+<script>
+  const setupTheme = () => {
+    const root = document.documentElement;
+    const dark = root.dataset.theme === 'dark';
+    document.querySelector<HTMLMetaElement>('#theme-color')?.setAttribute('content', dark ? '#121412' : '#f3f1eb');
+    document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(dark));
+      button.setAttribute('aria-label', dark ? 'Activar modo claro' : 'Activar modo oscuro');
+      button.title = dark ? 'Activar modo claro' : 'Activar modo oscuro';
+      if (button.dataset.ready) return;
+      button.dataset.ready = 'true';
+      button.addEventListener('click', () => {
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        root.style.colorScheme = next;
+        try { localStorage.setItem('dc-theme', next); } catch {}
+        setupTheme();
+      });
+    });
+  };
+
+  const setupMenu = () => {
+    const button = document.querySelector<HTMLButtonElement>('.menu-toggle');
+    const menu = document.querySelector<HTMLElement>('.mobile-nav');
+    if (!button || !menu || button.dataset.ready) return;
+    button.dataset.ready = 'true';
+    const close = () => {
+      button.setAttribute('aria-expanded', 'false');
+      button.setAttribute('aria-label', 'Abrir menú');
+      menu.dataset.open = 'false';
+      document.body.classList.remove('menu-open');
+      button.querySelector('span')!.textContent = '☰';
+    };
+    button.addEventListener('click', () => {
+      const open = button.getAttribute('aria-expanded') !== 'true';
+      button.setAttribute('aria-expanded', String(open));
+      button.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+      menu.dataset.open = String(open);
+      document.body.classList.toggle('menu-open', open);
+      button.querySelector('span')!.textContent = open ? '×' : '☰';
+      if (open) menu.querySelector<HTMLAnchorElement>('a')?.focus();
+    });
+    menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', close));
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { close(); button.focus(); } });
+  };
+  setupTheme();
+  setupMenu();
+  document.addEventListener('astro:page-load', setupTheme);
+  document.addEventListener('astro:page-load', setupMenu);
+</script>

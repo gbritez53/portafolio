@@ -1,0 +1,20 @@
+---
+interface Props {
+  project: { id: string; data: { slug: string; title: string; summary: string; category: string; cover: string; coverAlt: string; isDemo: boolean; services: string[] } };
+}
+const { project } = Astro.props;
+---
+<article class="project-card" data-reveal>
+  <a class="project-media" href={`/proyectos/${project.data.slug}`} aria-label={`Ver proyecto ${project.data.title}`}>
+    <img src={project.data.cover} alt={project.data.coverAlt} width="1400" height="900" loading="lazy" />
+  </a>
+  <div class="project-info">
+    <div class="project-tags">
+      {project.data.isDemo && <span class="label demo-label">Concepto</span>}
+      <span class="label">{project.data.category}</span>
+    </div>
+    <h3><a href={`/proyectos/${project.data.slug}`}>{project.data.title}</a></h3>
+    <p>{project.data.summary}</p>
+    <a class="arrow-link" href={`/proyectos/${project.data.slug}`}>Ver caso <span aria-hidden="true">→</span></a>
+  </div>
+</article>
