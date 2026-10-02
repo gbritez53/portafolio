@@ -8,6 +8,7 @@ export const site = {
   locations: ['México', 'España'],
   socials: [] as Array<{ label: string; url: string }>,
   form: {
+    enabled: false,
     showBudget: true,
     budgetOptions: ['Por definir', 'Quiero orientación', 'Tengo una cifra y la contaré en el mensaje'],
   },
