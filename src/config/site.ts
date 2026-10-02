@@ -26,14 +26,14 @@ export const site = {
    * Precio de lanzamiento. Desactívalo (enabled: false) cuando se cubran las plazas:
    * anunciar plazas limitadas que no lo son engaña al cliente.
    */
-  launchOffer: { enabled: true, discount: 30, slots: 5 },
+  launchOffer: { enabled: false, discount: 30, slots: 5 },
   packs: [
     {
       id: 'restaurantes',
       href: '/restaurantes',
       label: 'Restaurantes',
       title: 'Carta digital + pedidos por WhatsApp',
-      price: 190,
+      price: 160,
       monthly: 15,
       delivery: 'Lista en 5 días',
       pitch: 'Tus clientes ven la carta en el móvil y el pedido te llega completo al WhatsApp. Sin comisiones por pedido.',
@@ -46,13 +46,14 @@ export const site = {
         'Tu propio dominio (.es o .com)',
       ],
       waText: 'Hola, tengo un restaurante y quiero una demo gratis de mi carta online.',
+      extra: '',
     },
     {
       id: 'alojamientos',
       href: '/alojamientos',
       label: 'Alojamientos rurales',
       title: 'Web para tu alojamiento',
-      price: 290,
+      price: 205,
       monthly: 15,
       delivery: 'Lista en 10 días',
       pitch: 'Una web que enseña tu casa, tu entorno y cómo llegar, y que convierte visitas en reservas directas por WhatsApp o email.',
@@ -60,11 +61,12 @@ export const site = {
         'Hasta 5 secciones: inicio, espacios, entorno, cómo llegar y contacto',
         'Galería de fotos pensada para el móvil',
         'Mapa interactivo para llegar y explorar la zona',
-        'Botón de reserva directa por WhatsApp o email',
+        'Botón de contacto directo por WhatsApp o email',
         'SEO básico: títulos, descripciones y sitemap',
         'Tu propio dominio (.es o .com)',
       ],
       waText: 'Hola, tengo un alojamiento rural y quiero una demo gratis de mi web.',
+      extra: '¿Necesitas un sistema de reservas con calendario? Consúltanos y te lo presupuestamos.',
     },
   ],
   monthlyIncludes: 'Alojamiento web, dominio, certificado SSL y cambios pequeños (precios, horarios, fotos). Sin permanencia.',

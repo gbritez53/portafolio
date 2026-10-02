@@ -394,6 +394,7 @@ body.menu-open .wa-float { display: none; }
 .price-list li { position: relative; padding-left: 1.6rem; }
 .price-list li::before { content: "✓"; position: absolute; left: 0; font-weight: 800; color: #54820d; }
 html[data-theme="dark"] .price-list li::before { color: var(--lime); }
+.price-extra { margin: 0; padding: .7rem .9rem; border: 1px dashed var(--line); border-radius: var(--radius-sm); font-size: .9rem; }
 .price-delivery { margin: auto 0 0; font: .75rem var(--font-mono); color: var(--muted); }
 .pricing-note { max-width: 52rem; margin-top: 1.5rem; color: var(--muted); }
 

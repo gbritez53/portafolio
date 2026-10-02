@@ -24,6 +24,7 @@ const offer = site.launchOffer;
           <span>pago único + {pack.monthly} €/mes</span>
         </div>
         <ul class="price-list">{pack.includes.map((item) => <li>{item}</li>)}</ul>
+        {pack.extra && <p class="price-extra">{pack.extra}</p>}
         <p class="price-delivery">{pack.delivery}, desde que tenemos tu material.</p>
         <div class="button-row">
           <a class="button button--lime" href={waLink(pack.waText)} target="_blank" rel="noopener noreferrer">Pedir demo gratis <span aria-hidden="true">↗</span></a>
