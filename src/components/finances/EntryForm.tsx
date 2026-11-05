@@ -1,9 +1,16 @@
 import { useState, type FormEvent } from "react";
 import { LoaderCircle, Repeat, Trash2 } from "lucide-react";
 import { CategoryDot, FinanceDialog, inputClass, KindToggle, labelClass, primaryButtonClass, secondaryButtonClass } from "@/components/finances/FinanceDialog";
-import { amountToInput, parseAmount } from "@/lib/finance/money";
+import { ShoppingPicker } from "@/components/finances/ShoppingPicker";
+import { amountToInput, formatAmount, parseAmount } from "@/lib/finance/money";
+import { deleteShoppingItems } from "@/lib/shopping-api";
+import { summarizeSelection } from "@/lib/shopping/selection";
 import { getTodayKey } from "@/lib/dates";
 import type { EntryKind, FinanceCategory, FinanceEntry, FinanceEntryDraft } from "@/types/finance";
+import type { ShoppingItem } from "@/types/shopping";
+
+const MAX_NOTE = 200;
+const GROCERIES_CATEGORY = "supermercado";
 
 interface EntryFormProps {
   entry?: FinanceEntry;
@@ -29,6 +36,9 @@ export function EntryForm({ entry, categories, defaultDate, onSave, onDelete, on
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState("");
   const [savedCount, setSavedCount] = useState(0);
+  const [shoppingSelection, setShoppingSelection] = useState<ShoppingItem[]>([]);
+  // Cambia tras guardar para que el selector vuelva a cargar la lista sin lo ya anotado.
+  const [pickerKey, setPickerKey] = useState(0);
 
   // La categoria actual sigue visible aunque este archivada (al editar un movimiento viejo).
   const options = categories.filter((category) => category.kind === kind && (!category.archived || category.id === categoryId));
@@ -37,6 +47,17 @@ export function EntryForm({ entry, categories, defaultDate, onSave, onDelete, on
     setKind(next);
     if (!categories.some((category) => category.id === categoryId && category.kind === next)) setCategoryId(firstCategory(categories, next));
   };
+
+  // Elegir productos de la lista del super propone monto, nota y categoria; todo se puede corregir.
+  const pickShopping = (items: ShoppingItem[]) => {
+    setShoppingSelection(items);
+    if (items.length === 0) return;
+    const summary = summarizeSelection(items);
+    if (summary.amount !== null) setAmount(amountToInput(summary.amount));
+    setNote(summary.note.slice(0, MAX_NOTE));
+    if (categories.some((category) => category.id === GROCERIES_CATEGORY && category.kind === "expense" && !category.archived)) setCategoryId(GROCERIES_CATEGORY);
+  };
+  const shoppingSummary = summarizeSelection(shoppingSelection);
 
   const submit = async (event: FormEvent, another = false) => {
     event.preventDefault();
@@ -49,6 +70,21 @@ export function EntryForm({ entry, categories, defaultDate, onSave, onDelete, on
     setSubmitting(true);
     try {
       await onSave({ kind, amount: cents, date, categoryId, note });
+      const picked = kind === "expense" ? shoppingSelection.map((item) => item.id) : [];
+      if (picked.length) {
+        setShoppingSelection([]);
+        setPickerKey((key) => key + 1);
+        try {
+          await deleteShoppingItems(picked);
+        } catch {
+          // El gasto ya esta guardado: se vacia el formulario (para no duplicarlo) y se avisa.
+          setAmount("");
+          setNote("");
+          setSavedCount((count) => count + 1);
+          setError("Gasto guardado, pero no se pudieron quitar los productos de la lista del súper. Quítalos desde Súper.");
+          return;
+        }
+      }
       if (another) {
         // Para anotar varios gastos hormiga seguidos: se queda abierto con la misma fecha y categoria.
         setAmount("");
@@ -81,6 +117,19 @@ export function EntryForm({ entry, categories, defaultDate, onSave, onDelete, on
     <FinanceDialog eyebrow="Gastos" title={entry ? "Editar movimiento" : "Anotar movimiento"} onClose={onClose}>
       <form onSubmit={(event) => void submit(event)} className="space-y-5 px-5 py-6 sm:px-7 sm:py-7">
         <KindToggle value={kind} onChange={changeKind} />
+
+        {!entry && kind === "expense" && (
+          <>
+            <ShoppingPicker key={pickerKey} selected={shoppingSelection} onChange={pickShopping} />
+            {shoppingSummary.missingPrices > 0 && (
+              <p className="-mt-3 px-1 text-xs font-bold text-[var(--muted-strong)]">
+                {shoppingSummary.missingPrices === shoppingSelection.length
+                  ? "Lo elegido no tiene precio: escribe el total del ticket."
+                  : `${shoppingSummary.missingPrices} sin precio: revisa el monto (${formatAmount(shoppingSummary.amount ?? 0)} sin ellos).`}
+              </p>
+            )}
+          </>
+        )}
 
         {entry?.recurringId && (
           <p className="flex items-center gap-2 rounded-2xl bg-[var(--surface-muted)] px-4 py-3 text-xs font-bold text-[var(--muted-strong)]">
@@ -134,7 +183,7 @@ export function EntryForm({ entry, categories, defaultDate, onSave, onDelete, on
 
         <label className="block">
           <span className={labelClass}>Nota <span className="normal-case tracking-normal text-[var(--muted)]">(opcional)</span></span>
-          <input value={note} onChange={(event) => setNote(event.target.value)} maxLength={200} placeholder={kind === "expense" ? "Cortado en el bar de la esquina" : "Pago de la web de Tinas"} className={inputClass} />
+          <input value={note} onChange={(event) => setNote(event.target.value)} maxLength={MAX_NOTE} placeholder={kind === "expense" ? "Cortado en el bar de la esquina" : "Pago de la web de Tinas"} className={inputClass} />
         </label>
 
         {savedCount > 0 && !error && (
