@@ -180,6 +180,16 @@ export async function getTurso(): Promise<Client> {
           payload_version INTEGER NOT NULL DEFAULT 1,
           updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )`,
+      // Lista del super compartida por todo el panel: no va cifrada por usuario (no se podria compartir).
+      `CREATE TABLE IF NOT EXISTS shopping_items (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          quantity TEXT NOT NULL DEFAULT '',
+          price INTEGER,
+          checked INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`,
       // Autonomo: facturas registradas y ajustes, tambien cifrados con la DEK.
       `CREATE TABLE IF NOT EXISTS autonomo_invoices (
           id TEXT PRIMARY KEY,

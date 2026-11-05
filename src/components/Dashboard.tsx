@@ -6,6 +6,7 @@ import { ClientsPage } from "@/components/clients/ClientsPage";
 import { FinancesPage } from "@/components/finances/FinancesPage";
 import { PasswordsPage } from "@/components/passwords/PasswordsPage";
 import { SectionSwitcher, type AppSection } from "@/components/SectionSwitcher";
+import { ShoppingPage } from "@/components/shopping/ShoppingPage";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PanelLogin } from "@/components/passwords/PanelLogin";
 import { usePanelSession, type PanelSession } from "@/hooks/usePanelSession";
@@ -15,6 +16,7 @@ const sectionTitles: Record<AppSection, string> = {
   clients: "Clientes · Panel",
   passwords: "Contraseñas · Panel",
   finances: "Gastos · Panel",
+  shopping: "Súper · Panel",
   autonomo: "Autónomo · Panel",
 };
 
@@ -67,6 +69,9 @@ function UnlockedDashboard({ onLock }: { onLock: PanelSession["lock"] }) {
         </div>
         <div className={activeSection === "finances" ? "block" : "hidden"}>
           <FinancesPage userVault={userVault} active={activeSection === "finances"} />
+        </div>
+        <div className={activeSection === "shopping" ? "block" : "hidden"}>
+          <ShoppingPage active={activeSection === "shopping"} />
         </div>
         <div className={activeSection === "autonomo" ? "block" : "hidden"}>
           <AutonomoPage userVault={userVault} />
