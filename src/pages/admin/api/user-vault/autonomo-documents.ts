@@ -54,9 +54,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     try {
       await put(pathname, upload.file, { access: "private", contentType: "application/octet-stream" });
     } catch (error) {
-      await database.execute({ sql: "DELETE FROM autonomo_documents WHERE id = ? AND user_id = ?", args: [upload.id, userId] });
-      // Si put llego a escribir antes de fallar, no queda un archivo huerfano.
-      await del(pathname).catch(() => undefined);
+      // Independientes: si falla borrar la fila igual se intenta borrar lo que put llego a escribir.
+      await Promise.allSettled([
+        database.execute({ sql: "DELETE FROM autonomo_documents WHERE id = ? AND user_id = ?", args: [upload.id, userId] }),
+        del(pathname),
+      ]);
       throw error;
     }
     return ok({ id: upload.id }, 201);
