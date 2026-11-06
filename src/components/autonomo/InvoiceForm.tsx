@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { LoaderCircle, Trash2 } from "lucide-react";
-import { FinanceDialog, inputClass, labelClass, primaryButtonClass, secondaryButtonClass } from "@/components/finances/FinanceDialog";
+import { FinanceDialog, inputClass, labelClass, primaryButtonClass, secondaryButtonClass, Select } from "@/components/finances/FinanceDialog";
 import { invoiceAmounts, suggestWithholding } from "@/lib/autonomo/invoice";
 import { amountToInput, formatAmount, parseAmount } from "@/lib/finance/money";
 import { getTodayKey } from "@/lib/dates";
@@ -132,15 +132,15 @@ export function InvoiceForm({ invoice, settings, defaultDate, onSave, onDelete, 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
             <span className={labelClass}>IVA</span>
-            <select value={vatRate} onChange={(event) => setVatRate(Number(event.target.value) as VatRate)} className={inputClass}>
+            <Select value={vatRate} onChange={(event) => setVatRate(Number(event.target.value) as VatRate)}>
               {VAT_RATES.map((rate) => <option key={rate} value={rate}>{rate}%</option>)}
-            </select>
+            </Select>
           </label>
           <label className="block">
             <span className={labelClass}>Retención IRPF</span>
-            <select value={withholdingRate} onChange={(event) => setManualWithholding(Number(event.target.value) as WithholdingRate)} className={inputClass}>
+            <Select value={withholdingRate} onChange={(event) => setManualWithholding(Number(event.target.value) as WithholdingRate)}>
               {WITHHOLDING_RATES.map((rate) => <option key={rate} value={rate}>{rate}%{rate === suggested ? " (sugerida)" : ""}</option>)}
-            </select>
+            </Select>
           </label>
         </div>
 

@@ -1,10 +1,20 @@
-import { useEffect, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { useEffect, type ReactNode, type SelectHTMLAttributes } from "react";
+import { ChevronDown, X } from "lucide-react";
 
 export const inputClass = "min-h-12 w-full rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-bold text-[var(--ink)] outline-none transition placeholder:font-medium placeholder:text-[var(--muted)] focus:border-[var(--line-strong)] focus:ring-3 focus:ring-[#c9f568]/35";
 export const labelClass = "mb-2 block text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--ink)]";
 export const primaryButtonClass = "flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ink)] px-4 text-sm font-extrabold text-[var(--paper)] shadow-[0_8px_20px_rgba(23,25,23,0.2)] transition hover:bg-[var(--ink-hover)] disabled:opacity-60";
 export const secondaryButtonClass = "flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-4 text-sm font-extrabold text-[var(--ink)] transition hover:bg-[var(--surface-muted)] disabled:opacity-60";
+
+/** Select con la flecha propia: la nativa queda pegada al borde y cambia en cada navegador. */
+export function Select({ className = "", children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <span className="relative block">
+      <select {...props} className={`${inputClass} cursor-pointer appearance-none pr-11 ${className}`}>{children}</select>
+      <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]" />
+    </span>
+  );
+}
 
 interface FinanceDialogProps {
   title: string;

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { LoaderCircle, Lock } from "lucide-react";
-import { FinanceDialog, inputClass, labelClass, primaryButtonClass } from "@/components/finances/FinanceDialog";
+import { FinanceDialog, inputClass, labelClass, primaryButtonClass, Select } from "@/components/finances/FinanceDialog";
 import { MAX_DOCUMENT_NOTE, validateDocumentFile } from "@/lib/autonomo/documents";
 import type { DocumentsController } from "@/hooks/useAutonomoDocuments";
 import type { DocumentKind, Invoice } from "@/types/autonomo";
@@ -74,9 +74,9 @@ export function DocumentForm({ invoices, defaultDate, onUpload, onClose }: Docum
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
             <span className={labelClass}>Tipo</span>
-            <select value={kind} onChange={(event) => setKind(event.target.value as DocumentKind)} className={inputClass}>
+            <Select value={kind} onChange={(event) => setKind(event.target.value as DocumentKind)}>
               {(Object.keys(documentKindLabels) as DocumentKind[]).map((id) => <option key={id} value={id}>{documentKindLabels[id]}</option>)}
-            </select>
+            </Select>
           </label>
           <label className="block">
             <span className={labelClass}>Fecha</span>
@@ -87,14 +87,14 @@ export function DocumentForm({ invoices, defaultDate, onUpload, onClose }: Docum
         {sortedInvoices.length > 0 && (
           <label className="block">
             <span className={labelClass}>Factura registrada <span className="normal-case tracking-normal text-[var(--muted)]">(opcional)</span></span>
-            <select value={invoiceId} onChange={(event) => pickInvoice(event.target.value)} className={inputClass}>
+            <Select value={invoiceId} onChange={(event) => pickInvoice(event.target.value)}>
               <option value="">Ninguna</option>
               {sortedInvoices.map((invoice) => (
                 <option key={invoice.id} value={invoice.id}>
                   {invoice.date} · {invoice.counterparty}{invoice.number ? ` · ${invoice.number}` : ""}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
         )}
 

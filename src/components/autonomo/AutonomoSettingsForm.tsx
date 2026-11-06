@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { LoaderCircle } from "lucide-react";
-import { FinanceDialog, inputClass, labelClass, primaryButtonClass } from "@/components/finances/FinanceDialog";
+import { FinanceDialog, inputClass, labelClass, primaryButtonClass, Select } from "@/components/finances/FinanceDialog";
 import { ACTIVITIES, findActivity } from "@/lib/autonomo/activities";
 import type { AutonomoSettings } from "@/types/autonomo";
 
@@ -51,7 +51,7 @@ export function AutonomoSettingsForm({ settings, onSave, onClose }: AutonomoSett
 
         <label className="block">
           <span className={labelClass}>Epígrafe del IAE *</span>
-          <select value={choice} onChange={(event) => setChoice(event.target.value)} className={inputClass}>
+          <Select value={choice} onChange={(event) => setChoice(event.target.value)}>
             <option value="" disabled>Elige tu epígrafe</option>
             <optgroup label="Sección 2.ª · Profesionales (con retención)">
               {ACTIVITIES.filter((activity) => activity.section === 2).map((activity) => (
@@ -64,7 +64,7 @@ export function AutonomoSettingsForm({ settings, onSave, onClose }: AutonomoSett
               ))}
             </optgroup>
             <option value={OTHER}>Otro epígrafe…</option>
-          </select>
+          </Select>
           {selected && (
             <span className="mt-2 block text-xs text-[var(--muted-strong)]">
               {selected.professional
