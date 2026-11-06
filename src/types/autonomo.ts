@@ -47,7 +47,7 @@ export interface AutonomoSettings {
 }
 
 /** Para que sirve el documento guardado en la boveda. */
-export type DocumentKind = "invoice" | "receipt" | "tax" | "other";
+export type DocumentKind = "invoice" | "receipt" | "tax" | "social" | "other";
 
 /** Archivo cifrado en Vercel Blob. Nombre, tipo y nota solo existen descifrados en el navegador. */
 export interface AutonomoDocument {

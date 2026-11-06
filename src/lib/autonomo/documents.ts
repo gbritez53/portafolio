@@ -10,7 +10,7 @@ export const MAX_DOCUMENT_BYTES = 4 * 1024 * 1024;
 /** IV (12 bytes) + tag de AES-GCM (16 bytes). */
 export const MAX_ENCRYPTED_DOCUMENT_BYTES = MAX_DOCUMENT_BYTES + 28;
 
-export const DOCUMENT_KINDS: readonly DocumentKind[] = ["invoice", "receipt", "tax", "other"];
+export const DOCUMENT_KINDS: readonly DocumentKind[] = ["invoice", "receipt", "tax", "social", "other"];
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

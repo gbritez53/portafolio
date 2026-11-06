@@ -62,6 +62,12 @@ describe("documentos de autónomo cifrados", () => {
     await expect(decodeDocumentMeta(bad, dek, USER, DOC)).rejects.toMatchObject({ code: "INVALID_INPUT" });
   });
 
+  it("acepta documentos de la Seguridad Social", async () => {
+    const dek = await key();
+    const social = { ...draft, kind: "social" as const, invoiceId: null };
+    expect(await decodeDocumentMeta(await encodeDocumentMeta(social, dek, USER, DOC), dek, USER, DOC)).toEqual(social);
+  });
+
   it("acepta hasta 4 MB y rechaza archivos vacíos o más grandes", () => {
     expect(MAX_DOCUMENT_BYTES).toBe(4 * 1024 * 1024);
     expect(MAX_ENCRYPTED_DOCUMENT_BYTES).toBe(MAX_DOCUMENT_BYTES + 28);

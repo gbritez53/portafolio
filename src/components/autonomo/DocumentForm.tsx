@@ -9,6 +9,7 @@ export const documentKindLabels: Record<DocumentKind, string> = {
   invoice: "Factura",
   receipt: "Ticket o justificante",
   tax: "Modelo o Hacienda",
+  social: "Seguridad Social",
   other: "Otro",
 };
 
