@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Download, FileText, LoaderCircle, Paperclip, Trash2, Upload } from "lucide-react";
 import { DocumentForm, documentKindLabels } from "@/components/autonomo/DocumentForm";
 import { formatShortDate } from "@/lib/dates";
+import { saveFile } from "@/lib/save-file";
 import type { DocumentsController } from "@/hooks/useAutonomoDocuments";
 import type { AutonomoDocument, Invoice } from "@/types/autonomo";
 
@@ -15,16 +16,6 @@ interface DocumentsPanelProps {
 function formatSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
-}
-
-// Descarga con el nombre original: el archivo se descifra en memoria y nunca pasa en claro por el servidor.
-function saveBlob(blob: Blob, name: string) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = name;
-  link.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 export function DocumentsPanel({ documents, invoices, year, defaultDate }: DocumentsPanelProps) {
@@ -42,7 +33,8 @@ export function DocumentsPanel({ documents, invoices, year, defaultDate }: Docum
     setError("");
     setBusyId(item.id);
     try {
-      saveBlob(await documents.open(item), item.name);
+      // Se descifra en memoria: el archivo nunca pasa en claro por el servidor.
+      saveFile(await documents.open(item), item.name);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "No se pudo abrir el documento.");
     } finally {

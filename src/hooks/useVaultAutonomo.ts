@@ -19,7 +19,8 @@ export interface AutonomoController {
   ready: boolean;
   error: string;
   refresh: () => Promise<void>;
-  saveInvoice: (draft: InvoiceDraft, existing?: Invoice) => Promise<void>;
+  /** `id` fija el de una factura nueva (p. ej. para adjuntarle el PDF antes de guardarla). */
+  saveInvoice: (draft: InvoiceDraft, existing?: Invoice, id?: string) => Promise<void>;
   deleteInvoice: (id: string) => Promise<void>;
   saveSettings: (settings: AutonomoSettings) => Promise<void>;
 }
@@ -99,9 +100,9 @@ export function useVaultAutonomo(session: VaultSession | null, onSessionError: (
     };
   }, [userId, dek, refresh]);
 
-  const saveInvoice = useCallback(async (draft: InvoiceDraft, existing?: Invoice) => {
+  const saveInvoice = useCallback(async (draft: InvoiceDraft, existing?: Invoice, newInvoiceId?: string) => {
     const current = requireSession();
-    const id = existing?.id ?? newId();
+    const id = existing?.id ?? newInvoiceId ?? newId();
     const clean = { ...draft, number: draft.number.trim(), counterparty: draft.counterparty.trim(), note: draft.note.trim() };
     await commit({ upserts: [await sealInvoice(current, id, clean)], deletes: [] });
     const now = new Date().toISOString();

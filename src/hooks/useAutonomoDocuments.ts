@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { deleteVaultDocument, downloadVaultDocument, listVaultDocuments, uploadVaultDocument } from "@/lib/user-vault-api";
-import { decodeDocumentMeta, decryptDocumentFile, encodeDocumentMeta, encryptDocumentFile, validateDocumentFile } from "@/lib/autonomo/documents";
+import { decodeDocumentMeta, decryptDocumentFile, encodeDocumentMeta, encryptDocumentFile, MAX_DOCUMENT_NOTE, validateDocumentFile } from "@/lib/autonomo/documents";
 import type { VaultSession } from "@/hooks/useVaultCredentials";
 import type { AutonomoDocument, DocumentDraft } from "@/types/autonomo";
 
@@ -70,7 +70,7 @@ export function useAutonomoDocuments(session: VaultSession | null, onSessionErro
     if (problem) throw new Error(problem);
     const current = requireSession();
     const id = globalThis.crypto.randomUUID();
-    const draft: DocumentDraft = { ...details, name: file.name.slice(0, 200) || "documento", type: file.type.slice(0, 100), size: file.size, note: details.note.trim() };
+    const draft: DocumentDraft = { ...details, name: file.name.slice(0, 200) || "documento", type: file.type.slice(0, 100), size: file.size, note: details.note.trim().slice(0, MAX_DOCUMENT_NOTE) };
     const sealed = await encodeDocumentMeta(draft, current.dek, current.userId, id);
     const encrypted = await encryptDocumentFile(new Uint8Array(await file.arrayBuffer()), current.dek, current.userId, id);
     await guarded(() => uploadVaultDocument({ id, payload: sealed.data, payloadIv: sealed.iv }, encrypted));

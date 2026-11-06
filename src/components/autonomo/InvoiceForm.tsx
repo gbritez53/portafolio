@@ -1,16 +1,23 @@
 import { useState, type FormEvent } from "react";
-import { LoaderCircle, Trash2 } from "lucide-react";
+import { FileText, LoaderCircle, Paperclip, Trash2 } from "lucide-react";
 import { FinanceDialog, inputClass, labelClass, primaryButtonClass, secondaryButtonClass, Select } from "@/components/finances/FinanceDialog";
+import { validateDocumentFile } from "@/lib/autonomo/documents";
 import { invoiceAmounts, suggestWithholding } from "@/lib/autonomo/invoice";
 import { amountToInput, formatAmount, parseAmount } from "@/lib/finance/money";
 import { getTodayKey } from "@/lib/dates";
-import { VAT_RATES, WITHHOLDING_RATES, type AutonomoSettings, type CounterpartyType, type Invoice, type InvoiceDraft, type InvoiceKind, type VatRate, type WithholdingRate } from "@/types/autonomo";
+import { saveFile } from "@/lib/save-file";
+import { VAT_RATES, WITHHOLDING_RATES, type AutonomoDocument, type AutonomoSettings, type CounterpartyType, type Invoice, type InvoiceDraft, type InvoiceKind, type VatRate, type WithholdingRate } from "@/types/autonomo";
 
 interface InvoiceFormProps {
   invoice?: Invoice;
   settings: AutonomoSettings;
   defaultDate?: string;
-  onSave: (draft: InvoiceDraft) => Promise<void>;
+  /** `id` es el de la factura (el actual o uno nuevo generado aqui). */
+  onSave: (draft: InvoiceDraft, id: string) => Promise<void>;
+  /** PDFs ya guardados de esta factura. */
+  attachments: AutonomoDocument[];
+  onAttach: (file: File, invoiceId: string, draft: InvoiceDraft) => Promise<void>;
+  onOpenAttachment: (document: AutonomoDocument) => Promise<Blob>;
   onDelete?: () => Promise<void>;
   onClose: () => void;
 }
@@ -27,7 +34,12 @@ export const counterpartyLabels: Record<CounterpartyType, string> = {
   foreign: "Extranjero",
 };
 
-export function InvoiceForm({ invoice, settings, defaultDate, onSave, onDelete, onClose }: InvoiceFormProps) {
+export function InvoiceForm({ invoice, settings, defaultDate, onSave, attachments, onAttach, onOpenAttachment, onDelete, onClose }: InvoiceFormProps) {
+  // El id existe desde el principio para poder adjuntar el PDF antes de guardar la factura.
+  const [invoiceId] = useState(() => invoice?.id ?? globalThis.crypto.randomUUID());
+  const [file, setFile] = useState<File | null>(null);
+  // Si el PDF ya subio y fallo guardar la factura, reintentar no lo sube dos veces.
+  const [fileUploaded, setFileUploaded] = useState(false);
   const [kind, setKind] = useState<InvoiceKind>(invoice?.kind ?? "issued");
   const [number, setNumber] = useState(invoice?.number ?? "");
   const [date, setDate] = useState(invoice?.date ?? defaultDate ?? getTodayKey());
@@ -54,10 +66,18 @@ export function InvoiceForm({ invoice, settings, defaultDate, onSave, onDelete, 
     if (cents === null) return setError("Escribe una base imponible válida, por ejemplo 900,00.");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return setError("Elige una fecha.");
     if (!counterparty.trim()) return setError(kind === "issued" ? "Escribe el cliente." : "Escribe el proveedor.");
+    const fileProblem = file ? validateDocumentFile(file) : "";
+    if (fileProblem) return setError(fileProblem);
 
     setSubmitting(true);
+    const draft: InvoiceDraft = { kind, number, date, counterparty, counterpartyType, base: cents, vatRate, withholdingRate, deductible: kind === "received" ? deductible : true, note };
     try {
-      await onSave({ kind, number, date, counterparty, counterpartyType, base: cents, vatRate, withholdingRate, deductible: kind === "received" ? deductible : true, note });
+      // Primero el PDF: si falla no queda una factura nueva a medias que se duplique al reintentar.
+      if (file && !fileUploaded) {
+        await onAttach(file, invoiceId, draft);
+        setFileUploaded(true);
+      }
+      await onSave(draft, invoiceId);
       onClose();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "No se pudo guardar la factura.");
@@ -155,6 +175,27 @@ export function InvoiceForm({ invoice, settings, defaultDate, onSave, onDelete, 
           <span className={labelClass}>Nota</span>
           <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="50% inicial, hosting anual…" className={inputClass} />
         </label>
+
+        <div>
+          <span className={labelClass}>PDF de la factura <span className="normal-case tracking-normal text-[var(--muted)]">(opcional)</span></span>
+          {attachments.length > 0 && (
+            <ul className="mb-2 space-y-1">
+              {attachments.map((attachment) => (
+                <li key={attachment.id}>
+                  <button type="button" onClick={() => void onOpenAttachment(attachment).then((blob) => saveFile(blob, attachment.name)).catch((reason) => setError(reason instanceof Error ? reason.message : "No se pudo abrir el PDF."))} className="flex min-h-10 w-full items-center gap-2 rounded-xl bg-[var(--surface-muted)] px-3 text-left text-sm font-bold text-[var(--ink)] transition hover:bg-[var(--line)]">
+                    <FileText aria-hidden="true" className="size-4 shrink-0 text-[var(--muted-strong)]" />
+                    <span className="truncate">{attachment.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <label className="flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl border border-dashed border-[var(--line)] px-4 text-sm font-bold text-[var(--muted-strong)] transition hover:bg-[var(--surface-muted)]">
+            <Paperclip aria-hidden="true" className="size-4 shrink-0" />
+            <span className="truncate">{file ? file.name : attachments.length ? "Adjuntar otro archivo" : "Adjuntar PDF (hasta 4 MB, se cifra)"}</span>
+            <input type="file" accept="application/pdf,image/*" disabled={fileUploaded} onChange={(event) => setFile(event.target.files?.[0] ?? null)} className="sr-only" />
+          </label>
+        </div>
 
         {amounts && (
           <dl className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-2xl bg-[var(--surface-muted)] px-4 py-3 text-sm tabular-nums text-[var(--ink)]">

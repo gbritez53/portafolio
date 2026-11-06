@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { ChevronLeft, ChevronRight, ListChecks, LoaderCircle, Lock, Plus, Settings2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ListChecks, LoaderCircle, Lock, Paperclip, Plus, Settings2 } from "lucide-react";
 import { AutonomoSettingsForm } from "@/components/autonomo/AutonomoSettingsForm";
 import { CalendarPanel } from "@/components/autonomo/CalendarPanel";
 import { DocumentsPanel } from "@/components/autonomo/DocumentsPanel";
@@ -52,6 +52,8 @@ export function AutonomoView({ autonomo, documents, owner, onLock, headerActions
     }
     return groups;
   }, [autonomo.invoices, year, kindFilter]);
+
+  const attachmentsOf = (invoiceId: string) => documents.documents.filter((item) => item.invoiceId === invoiceId);
 
   // Una factura nueva cae en el año que se esta mirando: hoy si es el actual, el 1 de enero si es otro.
   const defaultDate = year === currentYear ? today : `${year}-01-01`;
@@ -134,6 +136,7 @@ export function AutonomoView({ autonomo, documents, owner, onLock, headerActions
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-extrabold text-[var(--ink)]">
                           {invoice.counterparty}{invoice.number && <span className="font-bold text-[var(--muted-strong)]"> · {invoice.number}</span>}
+                          {attachmentsOf(invoice.id).length > 0 && <Paperclip aria-label="Con PDF" className="ml-1.5 inline size-3.5 text-[var(--muted-strong)]" />}
                         </span>
                         <span className="block text-xs text-[var(--muted-strong)]">
                           {formatShortDate(invoice.date)} · {invoice.kind === "issued" ? "Emitida" : "Recibida"} · {counterpartyLabels[invoice.counterpartyType]}
@@ -161,7 +164,10 @@ export function AutonomoView({ autonomo, documents, owner, onLock, headerActions
           invoice={form.invoice}
           settings={autonomo.settings}
           defaultDate={defaultDate}
-          onSave={(draft) => autonomo.saveInvoice(draft, form.invoice)}
+          onSave={(draft, id) => autonomo.saveInvoice(draft, form.invoice, id)}
+          attachments={form.invoice ? attachmentsOf(form.invoice.id) : []}
+          onAttach={(file, invoiceId, draft) => documents.upload(file, { kind: "invoice", date: draft.date, invoiceId, note: draft.number.trim() })}
+          onOpenAttachment={documents.open}
           onDelete={form.invoice ? () => autonomo.deleteInvoice(form.invoice!.id) : undefined}
           onClose={() => setForm(null)}
         />
