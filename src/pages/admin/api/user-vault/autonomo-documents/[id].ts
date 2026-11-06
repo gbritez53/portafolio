@@ -23,10 +23,10 @@ export const GET: APIRoute = async ({ params, locals }) => {
     if (!pathname) return fail("Documento no encontrado.", 404);
     const blob = await get(pathname, { access: "private" });
     if (!blob || blob.statusCode !== 200) return fail("No se encontró el archivo del documento.", 404);
+    // Sin Content-Length: `get` informa size 0 cuando Blob responde sin esa cabecera, y truncaria la descarga.
     return new Response(blob.stream, {
       headers: {
         "Content-Type": "application/octet-stream",
-        "Content-Length": String(blob.blob.size),
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",
       },
