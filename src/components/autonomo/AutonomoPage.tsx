@@ -2,6 +2,7 @@ import { Users } from "lucide-react";
 import { AutonomoView } from "@/components/autonomo/AutonomoView";
 import { headerButtonClass } from "@/components/passwords/PasswordsHeader";
 import { VaultGate } from "@/components/vault/VaultGate";
+import { useAutonomoDocuments } from "@/hooks/useAutonomoDocuments";
 import { useVaultAutonomo } from "@/hooks/useVaultAutonomo";
 import type { UserVaultAccess } from "@/hooks/useUserVault";
 
@@ -17,12 +18,14 @@ export function AutonomoPage({ userVault }: { userVault: UserVaultAccess }) {
 function UserVaultAutonomo({ userVault, onSwitchUser }: { userVault: UserVaultAccess; onSwitchUser: () => void }) {
   const session = userVault.active && userVault.dek ? { userId: userVault.active.id, dek: userVault.dek } : null;
   const autonomo = useVaultAutonomo(session, userVault.handleSessionError);
+  const documents = useAutonomoDocuments(session, userVault.handleSessionError);
 
   if (!session || !userVault.active) return null;
 
   return (
     <AutonomoView
       autonomo={autonomo}
+      documents={documents}
       owner={userVault.active.name}
       onLock={userVault.lock}
       headerActions={

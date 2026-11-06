@@ -54,16 +54,18 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: init?.body ? { "Content-Type": "application/json" } : undefined,
   });
-  if (!response.ok) {
-    let message = "No se pudo completar la operación.";
-    try {
-      message = ((await response.json()) as { error?: string }).error ?? message;
-    } catch {
-      // El cuerpo no era JSON: se queda el mensaje generico.
-    }
-    throw new ApiError(message, response.status);
-  }
+  if (!response.ok) throw await apiError(response);
   return (await response.json()) as T;
+}
+
+async function apiError(response: Response): Promise<ApiError> {
+  let message = "No se pudo completar la operación.";
+  try {
+    message = ((await response.json()) as { error?: string }).error ?? message;
+  } catch {
+    // El cuerpo no era JSON: se queda el mensaje generico.
+  }
+  return new ApiError(message, response.status);
 }
 
 const send = (method: string, body: unknown): RequestInit => ({ method, body: JSON.stringify(body) });
@@ -147,3 +149,29 @@ export interface AutonomoBatch {
 export const getVaultAutonomo = (signal?: AbortSignal) =>
   request<{ invoices: StoredInvoice[]; settings: SealedSettings | null }>("user-vault/autonomo", { signal });
 export const applyAutonomoBatch = (batch: AutonomoBatch) => request<{ ok: true }>("user-vault/autonomo", send("POST", batch));
+
+export interface StoredDocument extends SealedFinanceEntry {
+  createdAt: string;
+}
+
+export const listVaultDocuments = (signal?: AbortSignal) =>
+  request<{ documents: StoredDocument[] }>("user-vault/autonomo-documents", { signal }).then((r) => r.documents);
+export const deleteVaultDocument = (id: string) =>
+  request<{ ok: true }>(`user-vault/autonomo-documents/${encodeURIComponent(id)}`, { method: "DELETE" });
+
+// El archivo viaja ya cifrado. Sin pasar por `request`: lleva FormData y el navegador pone el boundary.
+export async function uploadVaultDocument(item: SealedFinanceEntry, encrypted: Uint8Array<ArrayBuffer>): Promise<void> {
+  const form = new FormData();
+  form.append("id", item.id);
+  form.append("payload", item.payload);
+  form.append("payloadIv", item.payloadIv);
+  form.append("file", new Blob([encrypted], { type: "application/octet-stream" }), "document.bin");
+  const response = await fetch(withBase("/api/user-vault/autonomo-documents"), { method: "POST", body: form, cache: "no-store" });
+  if (!response.ok) throw await apiError(response);
+}
+
+export async function downloadVaultDocument(id: string): Promise<Uint8Array<ArrayBuffer>> {
+  const response = await fetch(withBase(`/api/user-vault/autonomo-documents/${encodeURIComponent(id)}`), { cache: "no-store" });
+  if (!response.ok) throw await apiError(response);
+  return new Uint8Array(await response.arrayBuffer());
+}

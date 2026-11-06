@@ -207,7 +207,19 @@ export async function getTurso(): Promise<Client> {
           payload_version INTEGER NOT NULL DEFAULT 1,
           updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )`,
+      // Documentos: el archivo cifrado vive en Vercel Blob (pathname); aqui solo sus datos cifrados.
+      `CREATE TABLE IF NOT EXISTS autonomo_documents (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL REFERENCES vault_users(id),
+          pathname TEXT NOT NULL,
+          size INTEGER NOT NULL,
+          payload TEXT NOT NULL,
+          payload_iv TEXT NOT NULL,
+          payload_version INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )`,
       "CREATE INDEX IF NOT EXISTS autonomo_invoices_user_id_idx ON autonomo_invoices(user_id)",
+      "CREATE INDEX IF NOT EXISTS autonomo_documents_user_id_idx ON autonomo_documents(user_id)",
       "CREATE INDEX IF NOT EXISTS credentials_name_idx ON credentials(name)",
       "CREATE INDEX IF NOT EXISTS credentials_group_name_idx ON credentials(group_name)",
       "CREATE INDEX IF NOT EXISTS payments_subscription_id_idx ON payments(subscription_id)",

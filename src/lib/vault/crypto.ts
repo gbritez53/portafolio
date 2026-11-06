@@ -34,6 +34,8 @@ export const aad = {
   financeSettings: (userId: string) => `fin-settings:v1:${userId}`,
   autonomoInvoice: (userId: string, invoiceId: string) => `aut-inv:v1:${userId}:${invoiceId}`,
   autonomoSettings: (userId: string) => `aut-settings:v1:${userId}`,
+  autonomoDocument: (userId: string, documentId: string) => `aut-doc:v1:${userId}:${documentId}`,
+  autonomoDocumentFile: (userId: string, documentId: string) => `aut-doc-file:v1:${userId}:${documentId}`,
 };
 
 function subtle(): SubtleCrypto {
@@ -145,6 +147,35 @@ export async function unwrapDek(wrapped: Sealed, kek: CryptoKey, aadText: string
 /** Cifra un objeto JSON con la DEK. IV nuevo en cada escritura. */
 export function encryptJson(value: unknown, dek: CryptoKey, aadText: string): Promise<Sealed> {
   return seal(utf8Encode(JSON.stringify(value)), dek, aadText);
+}
+
+/** Cifra bytes crudos (archivos) con la DEK. Devuelve IV (12 bytes) + ciphertext, sin base64. */
+export async function encryptBytes(plain: Uint8Array, dek: CryptoKey, aadText: string): Promise<Uint8Array<ArrayBuffer>> {
+  const iv = randomBytes(IV_BYTES);
+  const encrypted = await subtle().encrypt(
+    { name: "AES-GCM", iv, additionalData: utf8Encode(aadText) },
+    dek,
+    plain as Uint8Array<ArrayBuffer>,
+  );
+  const packed = new Uint8Array(IV_BYTES + encrypted.byteLength);
+  packed.set(iv);
+  packed.set(new Uint8Array(encrypted), IV_BYTES);
+  return packed;
+}
+
+/** Inverso de `encryptBytes`. Clave/AAD incorrectos o bytes alterados -> VaultCryptoError. */
+export async function decryptBytes(packed: Uint8Array, dek: CryptoKey, aadText: string): Promise<Uint8Array<ArrayBuffer>> {
+  if (packed.length <= IV_BYTES) throw new VaultCryptoError("DECRYPT_FAILED", "Archivo cifrado incompleto");
+  try {
+    const plain = await subtle().decrypt(
+      { name: "AES-GCM", iv: packed.slice(0, IV_BYTES), additionalData: utf8Encode(aadText) },
+      dek,
+      packed.slice(IV_BYTES),
+    );
+    return new Uint8Array(plain);
+  } catch {
+    throw new VaultCryptoError("DECRYPT_FAILED", "No se pudo descifrar (clave, IV, datos o AAD incorrectos)");
+  }
 }
 
 /** Descifra a JSON. Clave/AAD incorrectos o datos alterados -> VaultCryptoError. */

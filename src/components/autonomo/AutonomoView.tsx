@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, ListChecks, LoaderCircle, Lock, Plus, Settings2 } from "lucide-react";
 import { AutonomoSettingsForm } from "@/components/autonomo/AutonomoSettingsForm";
 import { CalendarPanel } from "@/components/autonomo/CalendarPanel";
+import { DocumentsPanel } from "@/components/autonomo/DocumentsPanel";
 import { counterpartyLabels, InvoiceForm } from "@/components/autonomo/InvoiceForm";
 import { RoadmapDialog } from "@/components/autonomo/RoadmapDialog";
 import { TaxPanel } from "@/components/autonomo/TaxPanel";
@@ -10,10 +11,12 @@ import { invoiceAmounts, quarterOf, type Quarter } from "@/lib/autonomo/invoice"
 import { formatAmount } from "@/lib/finance/money";
 import { formatShortDate, getTodayKey } from "@/lib/dates";
 import type { AutonomoController } from "@/hooks/useVaultAutonomo";
+import type { DocumentsController } from "@/hooks/useAutonomoDocuments";
 import type { Invoice, InvoiceKind } from "@/types/autonomo";
 
 interface AutonomoViewProps {
   autonomo: AutonomoController;
+  documents: DocumentsController;
   owner: string;
   onLock: () => void;
   headerActions?: ReactNode;
@@ -29,7 +32,7 @@ const filters: { id: KindFilter; label: string }[] = [
 
 const QUARTERS: Quarter[] = [4, 3, 2, 1];
 
-export function AutonomoView({ autonomo, owner, onLock, headerActions }: AutonomoViewProps) {
+export function AutonomoView({ autonomo, documents, owner, onLock, headerActions }: AutonomoViewProps) {
   const today = getTodayKey();
   const currentYear = Number(today.slice(0, 4));
   const [year, setYear] = useState(currentYear);
@@ -150,6 +153,8 @@ export function AutonomoView({ autonomo, owner, onLock, headerActions }: Autonom
           </section>
         ))
       )}
+
+      {autonomo.ready && <DocumentsPanel documents={documents} invoices={autonomo.invoices} year={year} defaultDate={defaultDate} />}
 
       {form && (
         <InvoiceForm

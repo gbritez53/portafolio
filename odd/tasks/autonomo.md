@@ -20,7 +20,7 @@ Branch: `feat/autonomo` (from `origin/main`). Delivery strategy: ordered work-un
 | T1 | S1, S4, S6 | inline | done (RED→GREEN: 15 tests) | 9d8f8bf |
 | T2 | S4, S5 | inline | done (RED→GREEN: 10 tests) | ad1dc4d |
 | T3 | S3 | inline | done (RED→GREEN: 7 + 3 tests) | ebda4b4, see L9 |
-| T4 | S2 | inline | pending | — |
+| T4 | S2 | inline | done (RED→GREEN: 9 tests) | see L14 |
 | T5 | S4 | inline | pending | — |
 | T6 | S7 | inline | done (RED→GREEN: 4 tests) | see L12 |
 
@@ -46,3 +46,5 @@ Route evidence: no Writer trigger reason (tasks are sequential and depend on T1'
 - **L10** (2026-10-30) — User: "yo recien me hice autonomo ahora el 27 de octubre del 2027". Read as 27 October 2026 (today is 2026-10-30; "recién ahora"). The value is entered by the user in "Mi actividad" (encrypted settings), not in code. Expected behavior with it: 7% withholding through 2028, 15% from 2029; first filings 303/130 Q4 2026 (1–30 Jan 2027), 390-2026 (Jan 2027), Renta 2026 (Apr–Jun 2027); 130 reduction of 100 €/quarter in 2026 (no activity in 2025).
 - **L11** (2026-10-30) — User: "en esa pantalla se debe pode elegir el epigrafe, por si alguno de mi equipo registra otra actividad y usa el panel para gestionar su autonomo tambien" → S7 / T6. Settings are already per vault user; adds `epigrafe` (code) with `professional` derived from the catalog section.
 - **L12** (2026-10-30) — T6 done: `src/lib/autonomo/activities.ts` (+ tests) with 763/399/751 (section 2) and 845/844/843.9 (section 1), "Otro" with free code (max 12 chars) and manual section; settings gained `epigrafe`, `professional` derived from the catalog. Checks: vitest 27 files / 177 tests; `tsc` clean.
+- **L13** (2026-11-06) — User created the private Blob store ("Private", fra1, prefix BLOB) and connected the env vars: "ya conecte las .env vars con las del blob". Auth: OIDC + `BLOB_STORE_ID` on Vercel, `BLOB_READ_WRITE_TOKEN` also accepted (resolved by `@vercel/blob` 2.8.2).
+- **L14** (2026-11-06) — T4 done: `@vercel/blob@2.8.2`; `encryptBytes`/`decryptBytes` in `src/lib/vault/crypto.ts` (IV + ciphertext, AAD `aut-doc-file:v1:user:id`); `src/lib/autonomo/documents.ts` (+ tests: round trip, foreign user/id/tamper rejected, meta validation, 4 MB limit); `src/lib/server/document-input.ts` (+ tests); table `autonomo_documents` (pathname, size, sealed meta); routes `/admin/api/user-vault/autonomo-documents` (GET list, POST multipart upload: row first with `ON CONFLICT DO NOTHING`, then private `put`, rollback on failure) and `/[id]` (GET streams ciphertext, DELETE removes blob then row), pathname always read from a row filtered by `user_id`. UI: "Documentos {year}" in Autónomo with upload dialog (kind, date, optional linked invoice, note), download decrypts in the browser, delete with second tap. Checks: vitest 31 files / 195 tests; `tsc` clean. Not checked in the browser (local Node < Astro requirement). Risk: items 2 and 5.

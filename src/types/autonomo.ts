@@ -45,3 +45,25 @@ export interface AutonomoSettings {
   /** Pasos hechos de la hoja de ruta de la guia (1 a 10). */
   roadmapDone: number[];
 }
+
+/** Para que sirve el documento guardado en la boveda. */
+export type DocumentKind = "invoice" | "receipt" | "tax" | "other";
+
+/** Archivo cifrado en Vercel Blob. Nombre, tipo y nota solo existen descifrados en el navegador. */
+export interface AutonomoDocument {
+  id: string;
+  name: string;
+  /** MIME del archivo original (p. ej. `application/pdf`). */
+  type: string;
+  /** Bytes del archivo original. */
+  size: number;
+  kind: DocumentKind;
+  /** YYYY-MM-DD: fecha del documento (define en que año se lista). */
+  date: string;
+  /** Factura registrada a la que pertenece, si la hay. */
+  invoiceId: string | null;
+  note: string;
+  createdAt: string;
+}
+
+export type DocumentDraft = Omit<AutonomoDocument, "id" | "createdAt">;
