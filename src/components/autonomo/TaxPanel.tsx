@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { LoaderCircle, PiggyBank } from "lucide-react";
 import { FinanceDialog, inputClass, labelClass, primaryButtonClass } from "@/components/finances/FinanceDialog";
-import { filingDeadline, quarterly130, quarterlyVat, taxSavings } from "@/lib/autonomo/taxes";
+import { filingDeadline, quarterActive, quarterly130, quarterlyVat, taxSavings } from "@/lib/autonomo/taxes";
 import { amountToInput, formatAmount, parseAmount } from "@/lib/finance/money";
 import { formatShortDateWithYear } from "@/lib/dates";
 import type { AutonomoSettings, Invoice } from "@/types/autonomo";
@@ -14,18 +14,21 @@ interface TaxPanelProps {
   onSaveSettings: (settings: AutonomoSettings) => Promise<void>;
 }
 
-function resultLabel(amount: number, refundable: boolean): string {
+// Un negativo se resta en los trimestres siguientes del mismo año. En el 4T el 303 se puede devolver,
+// pero el 130 negativo no pasa al año siguiente.
+function resultLabel(amount: number, negative: string): string {
   if (amount > 0) return "A ingresar";
   if (amount === 0) return "Sin pago";
-  return refundable ? "A devolver o compensar" : "A compensar";
+  return negative;
 }
 
 export function TaxPanel({ invoices, settings, year, today, onSaveSettings }: TaxPanelProps) {
   const [editing, setEditing] = useState(false);
-  const savings = taxSavings(invoices, today, settings.filed);
+  const savings = taxSavings(invoices, today, settings.filed, settings.activityStart);
   const missing = savings.total - settings.setAside;
   const vat = quarterlyVat(invoices, year);
-  const irpf = quarterly130(invoices, year);
+  const irpf = quarterly130(invoices, year, settings.activityStart);
+  const rows = vat.filter((row) => quarterActive(year, row.quarter, settings.activityStart));
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
@@ -64,16 +67,19 @@ export function TaxPanel({ invoices, settings, year, today, onSaveSettings }: Ta
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--line)]">
-            {vat.map((row, index) => (
+            {rows.length === 0 && (
+              <tr><td colSpan={4} className="px-5 py-4 text-sm font-bold text-[var(--muted-strong)]">Sin modelos en {year}: tu alta es posterior.</td></tr>
+            )}
+            {rows.map((row) => (
               <tr key={row.quarter}>
                 <th scope="row" className="px-5 py-3 text-left font-extrabold">{row.quarter}T</th>
                 <td className="px-3 py-3">
                   <span className="block font-extrabold">{formatAmount(Math.abs(row.result))}</span>
-                  <span className="block text-xs text-[var(--muted-strong)]">{resultLabel(row.result, row.quarter === 4)}</span>
+                  <span className="block text-xs text-[var(--muted-strong)]">{resultLabel(row.result, row.quarter === 4 ? "A devolver o compensar" : "A compensar")}</span>
                 </td>
                 <td className="px-3 py-3">
-                  <span className="block font-extrabold">{formatAmount(Math.abs(irpf[index].result))}</span>
-                  <span className="block text-xs text-[var(--muted-strong)]">{resultLabel(irpf[index].result, false)}</span>
+                  <span className="block font-extrabold">{formatAmount(Math.abs(irpf[row.quarter - 1].result))}</span>
+                  <span className="block text-xs text-[var(--muted-strong)]">{resultLabel(irpf[row.quarter - 1].result, row.quarter === 4 ? "Negativa: no se arrastra" : "A compensar")}</span>
                 </td>
                 <td className="px-5 py-3 text-xs font-bold">{formatShortDateWithYear(filingDeadline(year, row.quarter))}</td>
               </tr>

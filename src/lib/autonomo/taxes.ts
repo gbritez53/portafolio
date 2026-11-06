@@ -75,6 +75,13 @@ function quarterlyReduction(invoices: Invoice[], year: number): number {
   return taxRules(year).reductionTiers.find((tier) => previous <= tier.upTo)?.amount ?? 0;
 }
 
+const QUARTER_END = ["03-31", "06-30", "09-30", "12-31"];
+
+/** Si el trimestre ya es de actividad: termina el dia del alta o despues. Sin fecha de alta, todos cuentan. */
+export function quarterActive(year: number, quarter: Quarter, activityStart: string | null): boolean {
+  return !activityStart || `${year}-${QUARTER_END[quarter - 1]}` >= activityStart;
+}
+
 export interface IrpfQuarter extends YieldTotals {
   quarter: Quarter;
   /** Casilla 04: 20% del rendimiento positivo. */
@@ -89,7 +96,8 @@ export interface IrpfQuarter extends YieldTotals {
   result: number;
 }
 
-export function quarterly130(invoices: Invoice[], year: number): IrpfQuarter[] {
+/** Antes del alta no se presenta el 130: esos trimestres no restan minoracion ni dejan negativos. */
+export function quarterly130(invoices: Invoice[], year: number, activityStart: string | null = null): IrpfQuarter[] {
   const rules = taxRules(year);
   const reduction = quarterlyReduction(invoices, year);
   let previousPayments = 0;
@@ -98,10 +106,10 @@ export function quarterly130(invoices: Invoice[], year: number): IrpfQuarter[] {
     const totals = yieldThrough(invoices, year, quarter);
     const gross = totals.netYield > 0 ? Math.round(totals.netYield * rules.paymentRate) : 0;
     const box07 = gross - previousPayments - totals.withholdings;
-    const box14 = box07 - reduction;
+    const box14 = quarterActive(year, quarter, activityStart) ? box07 - reduction : 0;
     const compensated = box14 > 0 ? Math.min(pendingNegative, box14) : 0;
     const result = box14 - compensated;
-    const row = { quarter, ...totals, gross, previousPayments, reduction, compensated, result };
+    const row = { quarter, ...totals, gross, previousPayments, reduction: quarterActive(year, quarter, activityStart) ? reduction : 0, compensated, result };
     if (box07 > 0) previousPayments += box07;
     pendingNegative = pendingNegative - compensated + (result < 0 ? -result : 0);
     return row;
@@ -138,13 +146,13 @@ export interface TaxSavings {
  * Lo que hay que tener apartado hoy: el IVA y el 130 a ingresar de los trimestres pendientes.
  * Un modelo ya presentado (`303-2026-3` en `filed`) ya salio de la cuenta y no cuenta.
  */
-export function taxSavings(invoices: Invoice[], today: string, filed: string[] = []): TaxSavings {
+export function taxSavings(invoices: Invoice[], today: string, filed: string[] = [], activityStart: string | null = null): TaxSavings {
   const done = new Set(filed);
   let vat = 0;
   let irpf = 0;
   for (const { year, quarter } of pendingQuarters(today)) {
     if (!done.has(`303-${year}-${quarter}`)) vat += Math.max(0, quarterlyVat(invoices, year)[quarter - 1].result);
-    if (!done.has(`130-${year}-${quarter}`)) irpf += Math.max(0, quarterly130(invoices, year)[quarter - 1].result);
+    if (!done.has(`130-${year}-${quarter}`)) irpf += Math.max(0, quarterly130(invoices, year, activityStart)[quarter - 1].result);
   }
   return { vat, irpf, total: vat + irpf };
 }

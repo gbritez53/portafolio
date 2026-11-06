@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filingDeadline, pendingQuarters, quarterly130, quarterlyVat, taxSavings } from "@/lib/autonomo/taxes";
+import { filingDeadline, pendingQuarters, quarterActive, quarterly130, quarterlyVat, taxSavings } from "@/lib/autonomo/taxes";
 import type { Invoice, InvoiceDraft } from "@/types/autonomo";
 
 let seq = 0;
@@ -74,6 +74,21 @@ describe("modelo 130 (pago fraccionado de IRPF)", () => {
     expect(q3).toMatchObject({ previousPayments: 47_500, reduction: 10_000, compensated: 0, result: -10_000 });
   });
 
+  it("antes del alta no hay 130: ni minoración ni negativos que se arrastren", () => {
+    const invoices = [invoice({ date: "2026-11-15", base: 200_000 })];
+    const [q1, q2, q3, q4] = quarterly130(invoices, 2026, "2026-10-27");
+    for (const quarter of [q1, q2, q3]) expect(quarter).toMatchObject({ reduction: 0, compensated: 0, result: 0 });
+    // 2.000 € − 5% = 1.900 € → 20% = 380 € − 100 € de minoración = 280 €.
+    expect(q4).toMatchObject({ gross: 38_000, reduction: 10_000, compensated: 0, result: 28_000 });
+    expect(quarterly130(invoices, 2026)[3].result).toBe(0);
+  });
+
+  it("un trimestre cuenta desde el del alta", () => {
+    expect(quarterActive(2026, 3, "2026-10-27")).toBe(false);
+    expect(quarterActive(2026, 4, "2026-10-27")).toBe(true);
+    expect(quarterActive(2026, 1, null)).toBe(true);
+  });
+
   it("la minoración baja por tramos según el rendimiento del año anterior", () => {
     // 2025: 10.526,32 € de ingresos − 5% = 10.000 € → tramo de 75 €.
     const invoices = [invoice({ date: "2025-03-01", base: 1_052_632 }), invoice({ date: "2026-01-10", base: 1_000_000 })];
@@ -100,6 +115,13 @@ describe("plazos y hucha", () => {
     ];
     // 3T: IVA 210 + 130 (20% de 950) 190. 4T: IVA 210 + 130 (20% de 1.900 − 190 − 150) 40.
     expect(taxSavings(invoices, "2026-10-10")).toEqual({ vat: 42_000, irpf: 23_000, total: 65_000 });
+  });
+});
+
+describe("hucha con fecha de alta", () => {
+  it("los trimestres anteriores al alta no restan del 130 a apartar", () => {
+    const invoices = [invoice({ date: "2026-11-15", base: 200_000 })];
+    expect(taxSavings(invoices, "2026-12-01", [], "2026-10-27").irpf).toBe(28_000);
   });
 });
 
